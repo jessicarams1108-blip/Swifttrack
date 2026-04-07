@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SwiftTrack — Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- ── Login gate ── -->
+  <div id="loginGate">
+    <div class="login-card">
+      <div class="lock-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d40511" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h2>Admin Access</h2>
+      <p>Enter your admin password to continue.</p>
+      <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="current-password"/>
+      <div id="loginError">Incorrect password. Please try again.</div>
+      <button class="btn btn-primary btn-full" onclick="submitPassword()">Unlock Dashboard</button>
+    </div>
+  </div>
+
+  <!-- ── Navbar ── -->
+  <header class="navbar">
+    <a href="/" class="logo">
+      <span class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="2"/>
+          <path d="M16 8h4l3 5v4h-7V8z"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/>
+          <circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        SwiftTrack
+      </span>
+      <span class="tagline">Fast. Reliable. Worldwide.</span>
+    </a>
+    <nav>
+      <a href="/">Track</a>
+      <a href="/admin" class="active">Admin</a>
+    </nav>
+  </header>
+
+  <!-- ── Dashboard ── -->
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <p>Create new shipments and update existing ones.</p>
+    </div>
+
+    <div class="two-col">
+
+      <!-- Create Shipment -->
+      <div class="card">
+        <h2>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Create Shipment
+        </h2>
+        <div id="createAlert" class="alert"></div>
+        <form id="createForm" onsubmit="createShipment(event)">
+          <div class="form-group">
+            <label for="customerName">Customer Name</label>
+            <input type="text" id="customerName" placeholder="e.g. John Smith" required/>
+          </div>
+          <div class="form-group">
+            <label for="customerEmail">Customer Email <span style="color:var(--muted);font-weight:400;">(optional — for notifications)</span></label>
+            <input type="email" id="customerEmail" placeholder="e.g. john@email.com"/>
+          </div>
+          <div class="form-group">
+            <label for="originLocation">Origin Location</label>
+            <input type="text" id="originLocation" placeholder="e.g. New York, NY" required/>
+          </div>
+          <div class="form-group">
+            <label for="createCustomDate">Custom Date & Time <span style="color:var(--muted);font-weight:400;">(optional — leave blank for now)</span></label>
+            <input type="datetime-local" id="createCustomDate"/>
+          </div>
+          <button type="submit" class="btn btn-success btn-full" id="createBtn">Create Shipment</button>
+        </form>
+
+        <div id="newTrackingBox" style="display:none;margin-top:20px;">
+          <div class="tracking-id-box">
+            <div>
+              <div class="tid-label">Tracking ID Generated</div>
+              <div class="tid-value" id="newTrackingId"></div>
+            </div>
+            <button class="copy-btn" onclick="copyTrackingId()">Copy</button>
+          </div>
+          <p style="margin-top:10px;font-size:.82rem;color:var(--muted);">
+            Share this ID with your customer.
+            <a href="#" id="previewLink" target="_blank" style="color:var(--red);font-weight:600;">Preview →</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Update Shipment -->
+      <div class="card">
+        <h2>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d40511" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Update Shipment
+        </h2>
+        <div id="updateAlert" class="alert"></div>
+        <form id="updateForm" onsubmit="updateShipment(event)">
+          <div class="form-group">
+            <label for="updateTrackingId">Tracking ID</label>
+            <input type="text" id="updateTrackingId" placeholder="e.g. TRK12345678" required/>
+          </div>
+          <div class="form-group">
+            <label for="updateStatus">New Status</label>
+            <select id="updateStatus" required>
+              <option value="" disabled selected>Select a status</option>
+              <option>Order Placed</option>
+              <option>Picked Up</option>
+              <option>In Transit</option>
+              <option>Out for Delivery</option>
+              <option>Delivered</option>
+              <option>Failed Delivery Attempt</option>
+              <option>Returned to Sender</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="updateLocation">Current Location</label>
+            <input type="text" id="updateLocation" placeholder="e.g. Chicago, IL" required/>
+          </div>
+          <div class="form-group">
+            <label for="updateCustomDate">Custom Date & Time <span style="color:var(--muted);font-weight:400;">(optional — leave blank for now)</span></label>
+            <input type="datetime-local" id="updateCustomDate"/>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="updateBtn">Update Shipment</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Schema / Email Status Banner -->
+    <div id="schemaBanner" class="card schema-banner" style="display:none;margin-top:32px;">
+      <h2>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r=".5" fill="#b45309"/>
+        </svg>
+        Email Notifications Disabled
+      </h2>
+      <p>Your Supabase table is missing the <code>customer_email</code> column. Run the following SQL in your <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--red);">Supabase SQL Editor</a> to enable email notifications:</p>
+      <div class="sql-box">ALTER TABLE shipments ADD COLUMN IF NOT EXISTS customer_email TEXT;</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-top:8px;">After running the SQL, restart this app and email notifications will activate automatically.</p>
+    </div>
+  </div>
+
+  <footer>&copy; 2025 SwiftTrack Logistics. Fast. Reliable. Worldwide.</footer>
+
+  <script>
+    let adminPassword = '';
+
+    document.getElementById('passwordInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitPassword();
+    });
+
+    async function submitPassword() {
+      const input = document.getElementById('passwordInput').value;
+      if (!input) return;
+      const res = await fetch('/api/schema-status', {
+        headers: { 'x-admin-password': input }
+      });
+      if (res.status === 401) {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('passwordInput').value = '';
+        return;
+      }
+      adminPassword = input;
+      document.getElementById('loginGate').style.display = 'none';
+
+      // Check schema and show banner if needed
+      try {
+        const schema = await res.json();
+        if (!schema.customer_email_column) {
+          document.getElementById('schemaBanner').style.display = 'block';
+        }
+      } catch (e) {}
+    }
+
+    function showAlert(id, type, msg) {
+      const el = document.getElementById(id);
+      el.className = `alert alert-${type} show`;
+      el.textContent = msg;
+    }
+    function hideAlert(id) {
+      const el = document.getElementById(id);
+      el.className = 'alert';
+      el.textContent = '';
+    }
+
+    async function createShipment(e) {
+      e.preventDefault();
+      hideAlert('createAlert');
+
+      const customer_name  = document.getElementById('customerName').value.trim();
+      const customer_email = document.getElementById('customerEmail').value.trim();
+      const location       = document.getElementById('originLocation').value.trim();
+      const custom_date    = document.getElementById('createCustomDate').value || null;
+      const btn            = document.getElementById('createBtn');
+
+      btn.innerHTML = '<span class="spinner"></span> Creating…';
+      btn.disabled  = true;
+
+      try {
+        const res  = await fetch('/create', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'authorization': adminPassword },
+          body:    JSON.stringify({ customer_name, customer_email, location, custom_date })
+        });
+        const json = await res.json();
+        if (!res.ok) { showAlert('createAlert', 'error', json.error || 'Failed to create shipment.'); return; }
+
+        const tid = json.tracking_id;
+        document.getElementById('newTrackingId').textContent = tid;
+        document.getElementById('previewLink').href = `/?id=${tid}`;
+        document.getElementById('newTrackingBox').style.display = 'block';
+        showAlert('createAlert', 'success', `Shipment created! Tracking ID: ${tid}`);
+        document.getElementById('createForm').reset();
+
+      } catch (err) {
+        showAlert('createAlert', 'error', 'Unable to connect to server. Please try again.');
+      } finally {
+        btn.innerHTML = 'Create Shipment';
+        btn.disabled  = false;
+      }
+    }
+
+    async function updateShipment(e) {
+      e.preventDefault();
+      hideAlert('updateAlert');
+
+      const tracking_id = document.getElementById('updateTrackingId').value.trim().toUpperCase();
+      const status      = document.getElementById('updateStatus').value;
+      const location    = document.getElementById('updateLocation').value.trim();
+      const custom_date = document.getElementById('updateCustomDate').value || null;
+      const btn         = document.getElementById('updateBtn');
+
+      btn.innerHTML = '<span class="spinner"></span> Updating…';
+      btn.disabled  = true;
+
+      try {
+        const res  = await fetch('/update', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+          body:    JSON.stringify({ tracking_id, status, location, custom_date })
+        });
+        const json = await res.json();
+        if (!res.ok) { showAlert('updateAlert', 'error', json.error || 'Failed to update shipment.'); return; }
+        showAlert('updateAlert', 'success', `Shipment ${tracking_id} updated to "${status}".`);
+        document.getElementById('updateForm').reset();
+
+      } catch (err) {
+        showAlert('updateAlert', 'error', 'Unable to connect to server. Please try again.');
+      } finally {
+        btn.innerHTML = 'Update Shipment';
+        btn.disabled  = false;
+      }
+    }
+
+    function copyTrackingId() {
+      const tid = document.getElementById('newTrackingId').textContent;
+      navigator.clipboard.writeText(tid).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 1800);
+      });
+    }
+  </script>
+</body>
+</html>
